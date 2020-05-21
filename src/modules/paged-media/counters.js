@@ -19,7 +19,8 @@ class Counters extends Handler {
 			}
 		} else if (property === "counter-reset") {
 			let reset = this.handleReset(declaration, rule);
-			if (reset) {
+
+			if (reset && reset.selector.includes("pagedjs_") === false) {
 				dList.remove(dItem);
 			}
 		}
@@ -80,8 +81,19 @@ class Counters extends Handler {
 		let number = declaration.value.children.getSize() > 1
 							&& declaration.value.children.last().value;
 		let name = identifier && identifier.name;
-		let selector = csstree.generate(rule.ruleNode.prelude);
 		let counter;
+		let selector;
+		let prelude = rule.ruleNode.prelude;
+
+		if (rule.ruleNode.type === "Atrule" && rule.ruleNode.name === "page") {
+			selector = ".pagedjs_page";
+		} else {
+			selector = csstree.generate(prelude || rule.ruleNode);
+		}
+
+		if (name === "footnote") {
+			this.addFootnoteMarkerCounter(declaration.value.children);
+		}
 
 		if (!(name in this.counters)) {
 			counter = this.addCounter(name);
@@ -111,7 +123,7 @@ class Counters extends Handler {
 			countersArray.push(`${counters[c].name} 0`);
 		}
 		// Add to pages to allow cross page scope
-		this.insertRule(`.pagedjs_pages { counter-reset: ${countersArray.join(" ")}}`);
+		this.insertRule(`.pagedjs_pages { counter-reset: ${countersArray.join(" ")} pages var(--pagedjs-page-count) footnote var(--pagedjs-footnotes-count) footnote-marker var(--pagedjs-footnotes-count)}`);
 	}
 
 	insertRule(rule) {
@@ -155,7 +167,7 @@ class Counters extends Handler {
 		let increment, reset;
 		let resetValue, incrementValue, resetDelta;
 		let incrementArray;
-
+	
 		for (var i = 0; i < elements.length; i++) {
 			element = elements[i];
 			resetDelta = 0;
@@ -191,6 +203,41 @@ class Counters extends Handler {
 		}
 	}
 
+	addFootnoteMarkerCounter(list) {
+		let markers = [];
+		csstree.walk(list, {
+			visit: "Identifier",
+			enter: (identNode, iItem, iList) => {
+				markers.push(identNode.name);
+			}
+		});
+
+		// Already added
+		if (markers.includes("footnote-maker")) {
+			return;
+		}
+
+		list.insertData({
+			type: "WhiteSpace",
+			value: " "
+		});
+
+		list.insertData({
+			type: "Identifier",
+			name: "footnote-marker"
+		});
+
+		list.insertData({
+			type: "WhiteSpace",
+			value: " "
+		});
+
+		list.insertData({
+			type: "Number",
+			value: 0
+		});
+	}
+
 	incrementCounterForElement(element, incrementArray) {
 		if (!element || !incrementArray || incrementArray.length === 0) return;
 
@@ -216,8 +263,14 @@ class Counters extends Handler {
 	afterPageLayout(pageElement, page) {
 		let pgreset = pageElement.querySelectorAll("[data-counter-page-reset]");
 		pgreset.forEach((reset) => {
-			let value = reset.datasetCounterPageReset;
+			let value = reset.dataset.counterPageReset - 1; // subtract the current page increment
 			this.styleSheet.insertRule(`[data-page-number="${pageElement.dataset.pageNumber}"] { counter-reset: page ${value} }`, this.styleSheet.cssRules.length);
+		});
+
+		let notereset = pageElement.querySelectorAll("[data-counter-footnote-reset]");
+		notereset.forEach((reset) => {
+			let value = reset.dataset.counterFootnoteReset;
+			this.styleSheet.insertRule(`[data-page-number="${pageElement.dataset.pageNumber}"] .pagedjs_area { counter-reset: footnote ${value} footnote-marker ${value} }`, this.styleSheet.cssRules.length);
 		});
 	}
 

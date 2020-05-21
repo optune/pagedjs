@@ -74,6 +74,9 @@ const TEMPLATE = `
 			</div>
 			<div class="pagedjs_area">
 				<div class="pagedjs_page_content"></div>
+				<div class="pagedjs_footnote_area">
+					<div class="pagedjs_footnote_content"></div>
+				</div>
 			</div>
 		</div>
 	</div>

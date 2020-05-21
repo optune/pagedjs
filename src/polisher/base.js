@@ -8,6 +8,7 @@ export default `
 	--pagedjs-height-left: 11in;
 	--pagedjs-pagebox-width: 8.5in;
 	--pagedjs-pagebox-height: 11in;
+	--pagedjs-footnotes-height: 0mm;
 	--pagedjs-margin-top: 1in;
 	--pagedjs-margin-right: 1in;
 	--pagedjs-margin-bottom: 1in;
@@ -35,6 +36,7 @@ export default `
 	--pagedjs-mark-cross-display: none;
 	--pagedjs-mark-crop-display: none;
 	--pagedjs-page-count: 0;
+	--pagedjs-footnotes-count: 0;
 }
 
 @page {
@@ -358,15 +360,51 @@ export default `
 	grid-row: page;
 	width: 100%;
 	height: 100%;
-	padding: var(--pagedjs-padding-top) var(--pagedjs-padding-right) var(--pagedjs-padding-bottom) var(--pagedjs-padding-left) 
-
+	padding: var(--pagedjs-padding-top) var(--pagedjs-padding-right) var(--pagedjs-padding-bottom) var(--pagedjs-padding-left)
 }
 
 .pagedjs_pagebox > .pagedjs_area > .pagedjs_page_content {
 	width: 100%;
-	height: 100%;
+	height: calc(100% - var(--pagedjs-footnotes-height));
 	position: relative;
 	column-fill: auto;
+}
+
+.pagedjs_pagebox > .pagedjs_area > .pagedjs_footnote_area {
+	position: relative;
+	overflow: hidden;
+	width: 100%;
+	height: var(--pagedjs-footnotes-height);
+}
+
+.pagedjs_pagebox > .pagedjs_area > .pagedjs_footnote_area > .pagedjs_footnote_content {
+	overflow: hidden;
+	position: absolute;
+	bottom: 0;
+}
+
+.pagedjs_area [data-footnote-call] {
+	counter-increment: footnote;
+}
+
+.pagedjs_area [data-split-from] {
+	counter-increment: unset;
+	counter-reset: unset;
+}
+
+.pagedjs_area [data-footnote-call]::after { 
+	content: counter(footnote); 
+	vertical-align: super;
+}
+
+.pagedjs_area [data-footnote-marker] {
+	counter-increment: footnote-marker;
+	text-indent: 0;
+	display: block;
+}
+
+.pagedjs_area [data-footnote-marker]::before { 
+	content: counter(footnote-marker) ". ";
 }
 
 .pagedjs_page {
@@ -388,7 +426,7 @@ export default `
 }
 
 .pagedjs_pages {
-	counter-reset: pages var(--pagedjs-page-count);
+	counter-reset: pages var(--pagedjs-page-count) footnote var(--pagedjs-footnotes-count) footnote-marker var(--pagedjs-footnotes-count);
 }
 
 
