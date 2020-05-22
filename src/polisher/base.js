@@ -373,14 +373,20 @@ export default `
 .pagedjs_pagebox > .pagedjs_area > .pagedjs_footnote_area {
 	position: relative;
 	overflow: hidden;
-	width: 100%;
 	height: var(--pagedjs-footnotes-height);
+	display: flex;
+	flex-wrap: nowrap;
+	align-items: flex-end;
 }
 
 .pagedjs_pagebox > .pagedjs_area > .pagedjs_footnote_area > .pagedjs_footnote_content {
 	overflow: hidden;
-	position: absolute;
-	bottom: 0;
+	visibility: hidden;
+	flex: 1 0;
+}
+
+.pagedjs_pagebox > .pagedjs_area > .pagedjs_footnote_area > .pagedjs_footnote_content.hasNotes {
+	visibility: visible;
 }
 
 .pagedjs_area [data-footnote-call] {
@@ -405,6 +411,10 @@ export default `
 
 .pagedjs_area [data-footnote-marker]::before { 
 	content: counter(footnote-marker) ". ";
+}
+
+.pagedjs_area [data-note] {
+	break-before: avoid;
 }
 
 .pagedjs_page {

@@ -85,10 +85,10 @@ class AtPage extends Handler {
 			page.marginalia = marginalia;
 		}
 
-		let declarations = this.replaceDeclarations(node);
-
 		let notes = this.replaceNotes(node);
 		page.notes = notes;
+
+		let declarations = this.replaceDeclarations(node);
 
 		if (declarations.size) {
 			page.size = declarations.size;

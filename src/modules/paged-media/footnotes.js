@@ -64,12 +64,14 @@ class Footnotes extends Handler {
 		for (let n of notes) {
 			// Find elements
 			let elements = parsed.querySelectorAll(n);
-
+			let element;
 			for (var i = 0; i < elements.length; i++) {
+				element = elements[i];
 				// Add note type
-				elements[i].setAttribute("data-note", "footnote");
+				element.setAttribute("data-note", "footnote");
+				element.setAttribute("data-break-before", "avoid");
 				// Mark all parents
-				this.processFootnoteContainer(elements[i]);
+				this.processFootnoteContainer(element);
 			}
 		}
 	}
@@ -89,7 +91,7 @@ class Footnotes extends Handler {
 			prevElement = element;
 			element = element.parentElement;
 			
-			// If no containers were found and there are no further parents flage the last element
+			// If no containers were found and there are no further parents flag the last element
 			if (!element) {
 				prevElement.setAttribute("data-has-notes", "true");
 			}
@@ -122,8 +124,7 @@ class Footnotes extends Handler {
 		let area, size, right;
 		area = node.closest(".pagedjs_page_content");
 		size = area.getBoundingClientRect();
-		right = node.getBoundingClientRect().left + size.width;
-
+		right = size.left + size.width;
 
 		for (let i = 0; i < notes.length; ++i) {
 			let currentNote = notes[i];
@@ -156,6 +157,17 @@ class Footnotes extends Handler {
 		let noteContentBounds = noteContent.getBoundingClientRect();
 		let height = noteContentBounds.height;
 
+		// Get any top margin
+		let noteContentStyles = window.getComputedStyle(noteContent);
+		let noteContentMarginTop = parseInt(noteContentStyles.marginTop);
+		let noteContentMarginBottom = parseInt(noteContentStyles.marginBottom);
+		if (noteContentMarginTop) {
+			height += noteContentMarginTop;
+		}
+		if (noteContentMarginBottom) {
+			height += noteContentMarginBottom;
+		}
+
 		// TODO: add a max height in CSS
 
 		// Check element sizes
@@ -167,7 +179,8 @@ class Footnotes extends Handler {
 		// Update the pageArea height
 		if (noteCallBounds.bottom < noteAreaBounds.top - contentDelta) {
 			// the current note content will fit without pushing the call to the next page 
-			pageArea.style.setProperty("--pagedjs-footnotes-height", `${height}px`);	
+			pageArea.style.setProperty("--pagedjs-footnotes-height", `${height}px`);
+			noteContent.classList.add("hasNotes");
 		} else {
 			// put the note back and push to next page
 			pageArea.style.setProperty("--pagedjs-footnotes-height", `${noteAreaBounds.height + noteDelta}px`);
