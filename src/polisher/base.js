@@ -374,19 +374,14 @@ export default `
 	position: relative;
 	overflow: hidden;
 	height: var(--pagedjs-footnotes-height);
-	display: flex;
-	flex-wrap: nowrap;
-	align-items: flex-end;
 }
 
 .pagedjs_pagebox > .pagedjs_area > .pagedjs_footnote_area > .pagedjs_footnote_content {
 	overflow: hidden;
-	visibility: hidden;
-	flex: 1 0;
 }
 
-.pagedjs_pagebox > .pagedjs_area > .pagedjs_footnote_area > .pagedjs_footnote_content.hasNotes {
-	visibility: visible;
+.pagedjs_pagebox > .pagedjs_area > .pagedjs_footnote_area > .pagedjs_footnote_inner_content {
+	overflow: hidden;
 }
 
 .pagedjs_area [data-footnote-call] {
@@ -403,18 +398,14 @@ export default `
 	vertical-align: super;
 }
 
-.pagedjs_area [data-footnote-marker] {
+.pagedjs_area [data-footnote-marker]:not([data-split-from]) {
 	counter-increment: footnote-marker;
 	text-indent: 0;
 	display: block;
 }
 
-.pagedjs_area [data-footnote-marker]::before { 
+.pagedjs_area [data-footnote-marker]:not([data-split-from])::before { 
 	content: counter(footnote-marker) ". ";
-}
-
-.pagedjs_area [data-note] {
-	break-before: avoid;
 }
 
 .pagedjs_page {
@@ -565,13 +556,13 @@ export default `
 	margin: unset;
 }
 
-.pagedjs_pages > .pagedjs_page > .pagedjs_sheet > .pagedjs_pagebox > .pagedjs_area > div [data-split-to]:after,
-.pagedjs_pages > .pagedjs_page > .pagedjs_sheet > .pagedjs_pagebox > .pagedjs_area > div [data-split-to]::after {
+.pagedjs_pages > .pagedjs_page > .pagedjs_sheet > .pagedjs_pagebox > .pagedjs_area > div [data-split-to]:not([data-footnote-call]):after,
+.pagedjs_pages > .pagedjs_page > .pagedjs_sheet > .pagedjs_pagebox > .pagedjs_area > div [data-split-to]:not([data-footnote-call])::after {
 	content: unset;
 }
 
-.pagedjs_pages > .pagedjs_page > .pagedjs_sheet > .pagedjs_pagebox > .pagedjs_area > div [data-split-from]:before,
-.pagedjs_pages > .pagedjs_page > .pagedjs_sheet > .pagedjs_pagebox > .pagedjs_area > div [data-split-from]::before {
+.pagedjs_pages > .pagedjs_page > .pagedjs_sheet > .pagedjs_pagebox > .pagedjs_area > div [data-split-from]:not([data-footnote-call]):before,
+.pagedjs_pages > .pagedjs_page > .pagedjs_sheet > .pagedjs_pagebox > .pagedjs_area > div [data-split-from]:not([data-footnote-call])::before {
 	content: unset;
 }
 

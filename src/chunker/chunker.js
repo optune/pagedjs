@@ -75,7 +75,9 @@ const TEMPLATE = `
 			<div class="pagedjs_area">
 				<div class="pagedjs_page_content"></div>
 				<div class="pagedjs_footnote_area">
-					<div class="pagedjs_footnote_content"></div>
+					<div class="pagedjs_footnote_content">
+						<div class="pagedjs_footnote_inner_content"></div>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -268,7 +270,7 @@ class Chunker {
 		}
 	}
 
-	async handleBreaks(node) {
+	async handleBreaks(node, force) {
 		let currentPage = this.total + 1;
 		let currentPosition = currentPage % 2 === 0 ? "left" : "right";
 		// TODO: Recto and Verso should reverse for rtl languages
@@ -293,7 +295,9 @@ class Chunker {
 			breakBefore = node.dataset.breakBefore;
 		}
 
-		if( previousBreakAfter &&
+		if (force) {
+			page = this.addPage(true);
+		} else if( previousBreakAfter &&
 				(previousBreakAfter === "left" || previousBreakAfter === "right") &&
 				previousBreakAfter !== currentPosition) {
 			page = this.addPage(true);
@@ -488,7 +492,28 @@ class Chunker {
 	}
 	*/
 
+	async clonePage(originalPage) {
+		let lastPage = this.pages[this.pages.length - 1];
 
+		let page = new Page(this.pagesArea, this.pageTemplate, false, this.hooks);
+
+		this.pages.push(page);
+
+		// Create the pages
+		page.create(undefined, lastPage && lastPage.element);
+
+		page.index(this.total);
+
+		await this.hooks.beforePageLayout.trigger(page, undefined, undefined, this);
+		this.emit("page", page);
+
+		for (const className of originalPage.element.classList) {
+			page.element.classList.add(className);
+		}
+
+		await this.hooks.afterPageLayout.trigger(page.element, page, undefined, this);
+		this.emit("renderedPage", page);
+	}
 
 	loadFonts() {
 		let fontPromises = [];
