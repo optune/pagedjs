@@ -189,22 +189,35 @@ class Footnotes extends Handler {
 		// Check element sizes
 		let noteCallBounds = noteCall && noteCall.getBoundingClientRect();
 		let noteAreaBounds = noteArea.getBoundingClientRect();
-		
+	
 		// Get the @footnote margins
 		let noteContentMargins = this.totalMargins(noteContent);
 		let noteContentPadding = this.totalPadding(noteContent);
 		let noteContentBorders = this.totalBorder(noteContent);
 		let total = noteContentMargins + noteContentPadding + noteContentBorders;
 
-		let contentDelta = (height + total) - noteAreaBounds.height;
-		let noteDelta = noteCallBounds ? noteAreaBounds.top - noteCallBounds.bottom: 0;
+		// Get the correct line bottom for super or sub styled callouts
+		let noteCallBottom = 0;
+		if (noteCall) {
+			let prevSibling = noteCall.previousSibling;
+			let range = new Range();
+			if(prevSibling){
+				range.setStartBefore(prevSibling);
+			} else {
+				range.setStartBefore(noteCall);
+			}
+			range.setEndAfter(noteCall);
+			noteCallBottom = range.getBoundingClientRect().bottom;
+		}
 
+		let contentDelta = (height + total) - noteAreaBounds.height;
+		let noteDelta = noteCallBottom ? noteAreaBounds.top - noteCallBottom: 0;
 		if (needsNoteCall && noteCallBounds.left > right) {
 			// Note is offscreen and will be chunked to the next page on overflow
 			node.remove();
 		} else if (needsNoteCall && total > noteDelta) {
 			// No space to add even the footnote area
-			pageArea.style.setProperty("--pagedjs-footnotes-height", `0px`);
+			pageArea.style.setProperty("--pagedjs-footnotes-height", "0px");
 			// Add a wrapper as this div is removed later
 			let wrapperDiv = document.createElement("div");
 			wrapperDiv.appendChild(node);
@@ -213,7 +226,7 @@ class Footnotes extends Handler {
 		} else if (!needsNoteCall) {
 			// Call was previously added, force adding footnote
 			pageArea.style.setProperty("--pagedjs-footnotes-height", `${height + noteContentMargins + noteContentBorders}px`);
-		} else if (noteCallBounds.bottom < noteAreaBounds.top - contentDelta) {
+		} else if (noteCallBottom < noteAreaBounds.top - contentDelta) {
 			// the current note content will fit without pushing the call to the next page
 			pageArea.style.setProperty("--pagedjs-footnotes-height", `${height + noteContentMargins + noteContentBorders}px`);
 			// noteInnerContent.style.height = height;			

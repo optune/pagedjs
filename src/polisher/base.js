@@ -394,8 +394,19 @@ export default `
 }
 
 .pagedjs_area [data-footnote-call]::after { 
-	content: counter(footnote); 
+	content: counter(footnote);
 	vertical-align: super;
+	font-size: 65%;
+}
+
+@supports ( font-variant-position: super ) {
+  .pagedjs_area [data-footnote-call]::after {
+    content: counter(footnote);
+    vertical-align: baseline;
+    font-size: 100%;
+    line-height: inherit;
+    font-variant-position: super;
+  }
 }
 
 .pagedjs_area [data-footnote-marker]:not([data-split-from]) {
