@@ -138,6 +138,7 @@ layoutNode(node)
 renderNode(node, sourceNode)
 onOverflow(overflow, rendered, bounds)
 onBreakToken(breakToken, overflow, rendered)
+afterOverflowRemoved(removed, rendered)
 ```
 
 ## Setup

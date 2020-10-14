@@ -48,6 +48,7 @@ class Layout {
 			this.hooks.layoutNode = new Hook();
 			this.hooks.beforeOverflow = new Hook();
 			this.hooks.onOverflow = new Hook();
+			this.hooks.afterOverflowRemoved = new Hook();
 			this.hooks.onBreakToken = new Hook();
 		}
 
@@ -405,7 +406,8 @@ class Layout {
 			}
 
 			if (breakToken && breakToken.node && extract) {
-				this.removeOverflow(overflow, breakLetter);
+				let removed = this.removeOverflow(overflow, breakLetter);
+				this.hooks && this.hooks.afterOverflowRemoved.trigger(removed, rendered, this);
 			}
 
 		}
