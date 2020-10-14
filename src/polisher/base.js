@@ -374,6 +374,9 @@ export default `
 	position: relative;
 	overflow: hidden;
 	height: var(--pagedjs-footnotes-height);
+	display: flex;
+    justify-content: flex-end;
+    flex-flow: column;
 }
 
 .pagedjs_pagebox > .pagedjs_area > .pagedjs_footnote_area > .pagedjs_footnote_content {

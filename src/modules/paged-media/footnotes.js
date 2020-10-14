@@ -248,13 +248,16 @@ class Footnotes extends Handler {
 		}
 
 		let contentDelta = (height + total) - noteAreaBounds.height;
+		// Space between the top of the footnotes area and the bottom of the footnote call
 		let noteDelta = noteCallPosition ? noteAreaBounds.top - noteCallPosition : 0;
+		// Space needed for the force a break for the policy of the footnote
 		let notePolicyDelta = noteCallPosition ? noteAreaBounds.top - noteCallOffset: 0;
+		let hasNotes = noteArea.querySelector("[data-note='footnote']");
 
 		if (needsNoteCall && noteCallBounds.left > right) {
 			// Note is offscreen and will be chunked to the next page on overflow
 			node.remove();
-		} else if (needsNoteCall && total > noteDelta) {
+		} else if (!hasNotes && needsNoteCall && total > noteDelta) {
 			// No space to add even the footnote area
 			pageArea.style.setProperty("--pagedjs-footnotes-height", "0px");
 			// Add a wrapper as this div is removed later
@@ -358,7 +361,9 @@ class Footnotes extends Handler {
 					chunker.clonePage(page);
 				}
 			}
+
 		}
+		noteInnerContent.style.height = "auto";
 	}
 
 	beforePageLayout(page) {
@@ -381,7 +386,9 @@ class Footnotes extends Handler {
 			// Check if the call for that footnote has been removed with the overflow
 			let call = removed.querySelector(`[data-footnote-call="${note.dataset.ref}"]`);
 			if (call) {
+				console.log("removed", note);
 				note.remove();
+				// noteInnerContent.style.height = (noteAreaBounds.height + notePolicyDelta - total) + "px";
 			}
 		}
 	}
