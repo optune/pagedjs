@@ -388,7 +388,24 @@ export default `
 }
 
 .pagedjs_area [data-footnote-call] {
+	all: unset;
 	counter-increment: footnote;
+}
+
+[data-footnote-call]::after { 
+	vertical-align: super;
+	font-size: 65%;
+	line-height: normal;
+	content: counter(footnote);
+}
+
+@supports ( font-variant-position: super ) {
+	[data-footnote-call]::after {
+		vertical-align: baseline;
+		font-size: 100%;
+		line-height: inherit;
+		font-variant-position: super;
+	}
 }
 
 .pagedjs_area [data-split-from] {
@@ -396,29 +413,14 @@ export default `
 	counter-reset: unset;
 }
 
-.pagedjs_area [data-footnote-call]::after { 
-	content: counter(footnote);
-	vertical-align: super;
-	font-size: 65%;
-}
-
-@supports ( font-variant-position: super ) {
-  .pagedjs_area [data-footnote-call]::after {
-    content: counter(footnote);
-    vertical-align: baseline;
-    font-size: 100%;
-    line-height: inherit;
-    font-variant-position: super;
-  }
-}
-
 .pagedjs_area [data-footnote-marker]:not([data-split-from]) {
 	counter-increment: footnote-marker;
 	text-indent: 0;
-	display: block;
+	display: list-item;
+	list-style-position: inside;
 }
 
-.pagedjs_area [data-footnote-marker]:not([data-split-from])::before { 
+.pagedjs_area [data-footnote-marker]:not([data-split-from])::marker { 
 	content: counter(footnote-marker) ". ";
 }
 

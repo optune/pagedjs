@@ -31,15 +31,21 @@ class Footnotes extends Handler {
 			let policy = identifier && identifier.name;
 			if (policy) {
 				let selector = csstree.generate(rule.ruleNode.prelude);
-				this.footnotes[selector].policy = policy;
+				let note = this.footnotes[selector];
+				if(note) {
+					note.policy = policy;
+				}
 			}
 		}
 		if (property === "footnote-display") {
 			let identifier = declaration.value.children && declaration.value.children.first();
 			let display = identifier && identifier.name;
-			if (display) {
+			if (display && this.footnotes[selector]) {
 				let selector = csstree.generate(rule.ruleNode.prelude);
-				this.footnotes[selector].display = display;
+				let note = this.footnotes[selector];
+				if (note) {
+					note.display = display;
+				}
 			}
 		}
 	}
@@ -48,33 +54,82 @@ class Footnotes extends Handler {
 	onPseudoSelector(pseudoNode, pItem, pList, selector, rule) {
 		let name = pseudoNode.name;
 		if (name === "footnote-marker" ) {
-			// switch ::footnote-marker to ::before
-			pseudoNode.name = "before";
-			// update class selector to include attribute
-			let selectors = rule.ruleNode.prelude;
-			csstree.walk(selectors, {
-				visit: "ClassSelector",
-				enter: (node, item, list) => {
-					if (node.name) {
-						node.name += `[data-${name}]`;
-					}
+			// switch ::footnote-marker to [data-footnote-marker]::before
+			let prelude = rule.ruleNode.prelude;
+			let newPrelude = new csstree.List();
+
+			// Can't get remove to work, so just copying everything else
+			prelude.children.first().children.each((node) => {
+				if (node.type !== "PseudoElementSelector") {
+					newPrelude.appendData(node);
 				}
+			})
+
+			// newPrelude.appendData({
+			// 	type: "WhiteSpace",
+			// 	value: " ",
+			// 	loc: null
+			// });
+
+			// Add our data call
+			newPrelude.appendData({
+				type: "AttributeSelector",
+				name: {
+					type: "Identifier",
+					name: "data-footnote-marker",
+				},
+				flags: null,
+				loc: null,
+				matcher: null,
+				value: null
 			});
+
+			// Add new pseudo element
+			newPrelude.appendData({
+				type: "PseudoElementSelector",
+				name: "marker",
+				loc: null,
+				children: null
+			});
+
+			prelude.children.first().children = newPrelude;
 		}
 
 		if (name === "footnote-call") {
-			// switch ::footnote-call to ::after
-			pseudoNode.name = "after";
-			// update class selector to include attribute and extension
-			let selectors = rule.ruleNode.prelude;
-			csstree.walk(selectors, {
-				visit: "ClassSelector",
-				enter: (node, item, list) => {
-					if (node.name) {
-						node.name += `_pagedjs-${name}`;
-					}
+			// switch ::footnote-call to [data-footnote-call]::after
+
+			let prelude = rule.ruleNode.prelude;
+			let newPrelude = new csstree.List();
+
+			// Can't get remove to work, so just copying everything else
+			prelude.children.first().children.each((node) => {
+				if (node.type !== "PseudoElementSelector") {
+					newPrelude.appendData(node);
 				}
+			})
+
+			// Add our data call
+			newPrelude.appendData({
+				type: "AttributeSelector",
+				name: {
+					type: "Identifier",
+					name: "data-footnote-call",
+				},
+				flags: null,
+				loc: null,
+				matcher: null,
+				value: null
 			});
+
+			// Add new pseudo element
+			newPrelude.appendData({
+				type: "PseudoElementSelector",
+				name: "after",
+				loc: null,
+				children: null
+			});
+
+			prelude.children.first().children = newPrelude;
 		}
 	}
 
@@ -196,6 +251,9 @@ class Footnotes extends Handler {
 		// Add marker
 		node.dataset.footnoteMarker = node.dataset.ref;
 
+		// Add Id
+		node.id = `note-${node.dataset.ref}`;
+
 		// Get note content size
 		let height = noteContent.scrollHeight;
 
@@ -233,16 +291,16 @@ class Footnotes extends Handler {
 			let rangeBounds = range.getBoundingClientRect();
 			noteCallPosition = rangeBounds.bottom;
 			if (!notePolicy || notePolicy === "auto") {
-				noteCallOffset = rangeBounds.bottom;
+				noteCallOffset = Math.ceil(rangeBounds.bottom);
 			} else if (notePolicy === "line") {
-				noteCallOffset = rangeBounds.top;
+				noteCallOffset = Math.ceil(rangeBounds.top);
 			} else if (notePolicy === "block") {
 				// Check that there is a previous element on the page
-				let parentParagraph = noteCall.closest("p").previousSibling;
+				let parentParagraph = noteCall.closest("p").previousElementSibling;
 				if (parentParagraph) {
-					noteCallOffset = parentParagraph.getBoundingClientRect().bottom;
+					noteCallOffset = Math.ceil(parentParagraph.getBoundingClientRect().bottom);
 				} else {
-					noteCallOffset = rangeBounds.bottom
+					noteCallOffset = Math.ceil(rangeBounds.bottom);
 				}
 			}
 		}
@@ -280,17 +338,22 @@ class Footnotes extends Handler {
 
 	createFootnoteCall(node) {
 		let parentElement = node.parentElement;
-		let footnoteCall = document.createElement("span");
+		let footnoteCall = document.createElement("a");
 		for (const className of node.classList) {
-			footnoteCall.classList.add(`${className}_pagedjs-footnote-call`);
+			footnoteCall.classList.add(`${className}`);
 		}
+		
 		footnoteCall.dataset.footnoteCall = node.dataset.ref;
 		footnoteCall.dataset.ref = node.dataset.ref;
 
 		// Increment for counters
 		footnoteCall.dataset.dataCounterFootnoteIncrement = 1;
 
+		// Add link
+		footnoteCall.href = `#note-${node.dataset.ref}`;
+		
 		parentElement.insertBefore(footnoteCall, node);
+		
 		return footnoteCall;
 	}
 
@@ -324,6 +387,8 @@ class Footnotes extends Handler {
 			if (!startIsNode) {
 				let splitChild = extracted.firstElementChild;
 				splitChild.dataset.splitFrom = splitChild.dataset.ref;
+				
+				this.handleAlignment(noteInnerContent.lastElementChild);
 			}
 
 			this.needsLayout.push(extracted);
@@ -366,6 +431,17 @@ class Footnotes extends Handler {
 		noteInnerContent.style.height = "auto";
 	}
 
+	handleAlignment(node) {
+		let styles = window.getComputedStyle(node);
+		let alignLast = styles["text-align-last"];
+		node.dataset.lastSplitElement = "true";
+		if (alignLast === "auto") {
+			node.dataset.alignLastSplitElement = "justify";
+		} else {
+			node.dataset.alignLastSplitElement = alignLast;
+		}
+	}
+
 	beforePageLayout(page) {
 		while (this.needsLayout.length) {
 			let fragment = this.needsLayout.shift();
@@ -386,7 +462,6 @@ class Footnotes extends Handler {
 			// Check if the call for that footnote has been removed with the overflow
 			let call = removed.querySelector(`[data-footnote-call="${note.dataset.ref}"]`);
 			if (call) {
-				console.log("removed", note);
 				note.remove();
 				// noteInnerContent.style.height = (noteAreaBounds.height + notePolicyDelta - total) + "px";
 			}

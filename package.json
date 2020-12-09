@@ -12,7 +12,7 @@
     "@babel/polyfill": "^7.8.7",
     "@babel/runtime": "^7.9.2",
     "clear-cut": "^2.0.2",
-    "css-tree": "1.0.0-alpha.39",
+    "css-tree": "1.1.1",
     "event-emitter": "^0.3.5"
   },
   "devDependencies": {
@@ -29,13 +29,13 @@
     "jest-image-snapshot": "^3.0.1",
     "puppeteer": "^2.1.1",
     "rimraf": "^3.0.2",
-    "rollup": "^2.2.0",
+    "rollup": "^2.33.3",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-json": "^4.0.0",
-    "rollup-plugin-livereload": "^1.1.0",
+    "rollup-plugin-livereload": "^2.0.0",
     "rollup-plugin-node-builtins": "^2.1.2",
     "rollup-plugin-node-resolve": "^5.2.0",
-    "rollup-plugin-serve": "^1.0.1"
+    "rollup-plugin-serve": "^1.1.0"
   },
   "scripts": {
     "build": "rollup -c",
