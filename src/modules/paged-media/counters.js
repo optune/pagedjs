@@ -119,7 +119,10 @@ class Counters extends Handler {
 	}
 
 	insertRule(rule) {
-		this.styleSheet.insertRule(rule, this.styleSheet.cssRules.length);
+		// Avoid crashing of rendering
+		if (this.styleSheet) {
+			this.styleSheet.insertRule(rule, this.styleSheet.cssRules.length);	
+		}
 	}
 
 	processCounterIncrements(parsed, counter) {
