@@ -30,10 +30,13 @@ class Polisher {
 	}
 
 	setup() {
+		const styleElId = 'pagedjs-base-styles'
 		this.base = this.insert(baseStyles);
 		this.styleEl = document.createElement("style");
+		this.styleEl.id = styleElId
 		document.head.appendChild(this.styleEl);
-		this.styleSheet = this.styleEl.sheet;
+		const styles = document.getElementById(styleElId);
+		this.styleSheet = styles.sheet;
 		return this.styleSheet;
 	}
 
