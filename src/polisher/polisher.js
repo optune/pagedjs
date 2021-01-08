@@ -44,11 +44,9 @@ class Polisher {
 	}
 
 	async setup() {
-		if (!this.base) {
-			this.base = this.insert(baseStyles);	
-		}
+		this.base = this.insert(baseStyles, 'pagedjs-base-styles');	
 
-		const styleElId = "pagedjs-base-styles";
+		const styleElId = "pagedjs-rule-styles";
 		const stylesheetEl = document.getElementById(styleElId)
 
 		// Avoid duplicate loading of stylesheet
@@ -61,8 +59,6 @@ class Polisher {
 
 			this.styleSheet = await getStyleSheet(styleElId);
 		}
-
-		console.log('SHEET', this.styleSheet)
 
 		return this.styleSheet;
 	}
@@ -96,7 +92,7 @@ class Polisher {
 			let text = "";
 			for (let index = 0; index < originals.length; index++) {
 				text = await this.convertViaSheet(originals[index], urls[index]);
-				this.insert(text);
+				this.insert(text, "pagedjs-add-styles-" + index);
 			}
 			return text;
 		});
@@ -129,17 +125,27 @@ class Polisher {
 		return sheet.toString();
 	}
 
-	insert(text) {
-		let head = document.querySelector("head");
-		let style = document.createElement("style");
-		style.type = "text/css";
-		style.setAttribute("data-pagedjs-inserted-styles", "true");
+	insert(text, styleId) {
+		let style
 
-		style.appendChild(document.createTextNode(text));
+		if (styleId > '') {
+			style = document.getElementById(styleId)
+		}
 
-		head.appendChild(style);
+		if (!style) {
+			let head = document.querySelector("head");
+			style = document.createElement("style");
+			style.type = "text/css";
+			style.id = styleId
+			style.setAttribute("data-pagedjs-inserted-styles", "true");
 
-		this.inserted.push(style);
+			style.appendChild(document.createTextNode(text));
+
+			head.appendChild(style);
+
+			this.inserted.push(style);
+		}
+
 		return style;
 	}
 
