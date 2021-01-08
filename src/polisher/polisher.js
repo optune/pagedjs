@@ -3,6 +3,20 @@ import baseStyles from "./base";
 import Hook from "../utils/hook";
 import request from "../utils/request";
 
+const getStyleSheet = (styleElId, retryCount = 0) =>
+	new Promise(function (resolve) {
+		const styleSheet = document.getElementById(styleElId);
+		if (!!styleSheet && retryCount > 1) {
+			resolve(styleSheet.sheet);
+		} else if (retryCount >= 10) {
+			resolve(null);
+		} else {
+			setTimeout(function () {
+				getStyleSheet(styleElId, retryCount + 1).then(resolve)
+			}, 10);
+		}
+	});
+
 class Polisher {
 	constructor(setup) {
 		this.sheets = [];
@@ -29,14 +43,17 @@ class Polisher {
 		}
 	}
 
-	setup() {
-		const styleElId = 'pagedjs-base-styles'
+	async setup() {
+		const styleElId = "pagedjs-base-styles";
 		this.base = this.insert(baseStyles);
 		this.styleEl = document.createElement("style");
-		this.styleEl.id = styleElId
+		this.styleEl.id = styleElId;
 		document.head.appendChild(this.styleEl);
-		const styles = document.getElementById(styleElId);
-		this.styleSheet = styles.sheet;
+
+		this.styleSheet = await getStyleSheet(styleElId);
+
+		console.log('SHEET', this.styleSheet)
+
 		return this.styleSheet;
 	}
 
@@ -50,7 +67,7 @@ class Polisher {
 			if (typeof arguments[i] === "object") {
 				for (let url in arguments[i]) {
 					let obj = arguments[i];
-					f = new Promise(function(resolve, reject) {
+					f = new Promise(function (resolve, reject) {
 						urls.push(url);
 						resolve(obj[url]);
 					});
@@ -62,19 +79,17 @@ class Polisher {
 				});
 			}
 
-
 			fetched.push(f);
 		}
 
-		return await Promise.all(fetched)
-			.then(async (originals) => {
-				let text = "";
-				for (let index = 0; index < originals.length; index++) {
-					text = await this.convertViaSheet(originals[index], urls[index]);
-					this.insert(text);
-				}
-				return text;
-			});
+		return await Promise.all(fetched).then(async (originals) => {
+			let text = "";
+			for (let index = 0; index < originals.length; index++) {
+				text = await this.convertViaSheet(originals[index], urls[index]);
+				this.insert(text);
+			}
+			return text;
+		});
 	}
 
 	async convertViaSheet(cssStr, href) {
@@ -104,7 +119,7 @@ class Polisher {
 		return sheet.toString();
 	}
 
-	insert(text){
+	insert(text) {
 		let head = document.querySelector("head");
 		let style = document.createElement("style");
 		style.type = "text/css";

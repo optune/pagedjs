@@ -131,7 +131,7 @@ class Previewer {
 			stylesheets = this.removeStyles();
 		}
 
-		this.polisher.setup();
+		await this.polisher.setup();
 
 		this.handlers = this.initializeHandlers();
 
