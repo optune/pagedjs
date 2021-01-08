@@ -44,13 +44,23 @@ class Polisher {
 	}
 
 	async setup() {
-		const styleElId = "pagedjs-base-styles";
-		this.base = this.insert(baseStyles);
-		this.styleEl = document.createElement("style");
-		this.styleEl.id = styleElId;
-		document.head.appendChild(this.styleEl);
+		if (!this.base) {
+			this.base = this.insert(baseStyles);	
+		}
 
-		this.styleSheet = await getStyleSheet(styleElId);
+		const styleElId = "pagedjs-base-styles";
+		const stylesheetEl = document.getElementById(styleElId)
+
+		// Avoid duplicate loading of stylesheet
+		if (stylesheetEl) {
+			this.styleSheet = stylesheetEl.sheet
+		} else {
+			this.styleEl = document.createElement("style");
+			this.styleEl.id = styleElId;
+			document.head.appendChild(this.styleEl);
+
+			this.styleSheet = await getStyleSheet(styleElId);
+		}
 
 		console.log('SHEET', this.styleSheet)
 
