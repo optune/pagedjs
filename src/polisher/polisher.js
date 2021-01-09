@@ -13,7 +13,7 @@ const getStyleSheet = (styleElId, retryCount = 0) =>
 		} else {
 			setTimeout(function () {
 				getStyleSheet(styleElId, retryCount + 1).then(resolve)
-			}, 10);
+			}, 50);
 		}
 	});
 
@@ -60,6 +60,8 @@ class Polisher {
 			this.styleSheet = await getStyleSheet(styleElId);
 		}
 
+		console.log('STYLESHEET', this.styleSheet)
+		
 		return this.styleSheet;
 	}
 
