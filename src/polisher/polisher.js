@@ -3,17 +3,16 @@ import baseStyles from "./base";
 import Hook from "../utils/hook";
 import request from "../utils/request";
 
-const getStyleSheet = (styleElId, retryCount = 0) =>
+const getStyleSheet = (styleEl, retryCount = 0) =>
 	new Promise(function (resolve) {
-		const styleSheet = document.getElementById(styleElId);
-		if (!!styleSheet && retryCount > 1) {
-			resolve(styleSheet.sheet);
+		if (!!styleEl && !!styleEl.sheet) {
+			resolve(styleEl.sheet);
 		} else if (retryCount >= 10) {
 			resolve(null);
 		} else {
 			setTimeout(function () {
-				getStyleSheet(styleElId, retryCount + 1).then(resolve)
-			}, 50);
+				getStyleSheet(styleEl, retryCount + 1).then(resolve)
+			}, 100);
 		}
 	});
 
@@ -53,11 +52,12 @@ class Polisher {
 		if (stylesheetEl) {
 			this.styleSheet = stylesheetEl.sheet
 		} else {
-			this.styleEl = document.createElement("style");
-			this.styleEl.id = styleElId;
-			document.head.appendChild(this.styleEl);
+			const styleEl = document.createElement("style");
+			styleEl.id = styleElId;
+			document.head.appendChild(styleEl);
 
-			this.styleSheet = await getStyleSheet(styleElId);
+			this.styleEl = styleEl
+			this.styleSheet = await getStyleSheet(styleEl);
 		}
 
 		console.log('STYLESHEET', this.styleSheet)
@@ -94,7 +94,7 @@ class Polisher {
 			let text = "";
 			for (let index = 0; index < originals.length; index++) {
 				text = await this.convertViaSheet(originals[index], urls[index]);
-				this.insert(text, "pagedjs-add-styles-" + index);
+				this.insert(text, urls[index]);
 			}
 			return text;
 		});
