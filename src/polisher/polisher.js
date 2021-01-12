@@ -3,6 +3,19 @@ import baseStyles from "./base";
 import Hook from "../utils/hook";
 import request from "../utils/request";
 
+const getStyleSheet = (styleEl, retryCount = 0) =>
+	new Promise(function (resolve) {
+		if (!!styleEl && !!styleEl.sheet) {
+			resolve(styleEl.sheet);
+		} else if (retryCount >= 10) {
+			resolve(null);
+		} else {
+			setTimeout(function () {
+				getStyleSheet(styleEl, retryCount + 1).then(resolve)
+			}, 100);
+		}
+	});
+
 class Polisher {
 	constructor(setup) {
 		this.sheets = [];
@@ -29,11 +42,26 @@ class Polisher {
 		}
 	}
 
-	setup() {
-		this.base = this.insert(baseStyles);
-		this.styleEl = document.createElement("style");
-		document.head.appendChild(this.styleEl);
-		this.styleSheet = this.styleEl.sheet;
+	async setup() {
+		this.base = this.insert(baseStyles, 'pagedjs-base-styles');	
+
+		const styleElId = "pagedjs-rule-styles";
+		const stylesheetEl = document.getElementById(styleElId)
+
+		// Avoid duplicate loading of stylesheet
+		if (stylesheetEl) {
+			this.styleSheet = stylesheetEl.sheet
+		} else {
+			const styleEl = document.createElement("style");
+			styleEl.id = styleElId;
+			document.head.appendChild(styleEl);
+
+			this.styleEl = styleEl
+			this.styleSheet = await getStyleSheet(styleEl);
+		}
+
+		console.log('STYLESHEET', this.styleSheet)
+		
 		return this.styleSheet;
 	}
 
@@ -47,7 +75,7 @@ class Polisher {
 			if (typeof arguments[i] === "object") {
 				for (let url in arguments[i]) {
 					let obj = arguments[i];
-					f = new Promise(function(resolve, reject) {
+					f = new Promise(function (resolve, reject) {
 						urls.push(url);
 						resolve(obj[url]);
 					});
@@ -59,19 +87,17 @@ class Polisher {
 				});
 			}
 
-
 			fetched.push(f);
 		}
 
-		return await Promise.all(fetched)
-			.then(async (originals) => {
-				let text = "";
-				for (let index = 0; index < originals.length; index++) {
-					text = await this.convertViaSheet(originals[index], urls[index]);
-					this.insert(text);
-				}
-				return text;
-			});
+		return await Promise.all(fetched).then(async (originals) => {
+			let text = "";
+			for (let index = 0; index < originals.length; index++) {
+				text = await this.convertViaSheet(originals[index], urls[index]);
+				this.insert(text, urls[index]);
+			}
+			return text;
+		});
 	}
 
 	async convertViaSheet(cssStr, href) {
@@ -101,17 +127,27 @@ class Polisher {
 		return sheet.toString();
 	}
 
-	insert(text){
-		let head = document.querySelector("head");
-		let style = document.createElement("style");
-		style.type = "text/css";
-		style.setAttribute("data-pagedjs-inserted-styles", "true");
+	insert(text, styleId) {
+		let style
 
-		style.appendChild(document.createTextNode(text));
+		if (styleId > '') {
+			style = document.getElementById(styleId)
+		}
 
-		head.appendChild(style);
+		if (!style) {
+			let head = document.querySelector("head");
+			style = document.createElement("style");
+			style.type = "text/css";
+			style.id = styleId
+			style.setAttribute("data-pagedjs-inserted-styles", "true");
 
-		this.inserted.push(style);
+			style.appendChild(document.createTextNode(text));
+
+			head.appendChild(style);
+
+			this.inserted.push(style);
+		}
+
 		return style;
 	}
 
